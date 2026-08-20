@@ -27,7 +27,7 @@ NTFY_TOPIC = os.environ["NTFY_TOPIC"]  # e.g. tuksgolf-shifts-jm4829
 SCHEDULE_URL = "https://www.supersaas.com/schedule/TuksGolf/TuksGolf_Range_Shifts?view=month"
 STATE_FILE = Path(__file__).parent / "seen_shifts.json"
 
-TIME_RANGE_RE = re.compile(r"^\d{1,2}:\d{2}\s*[\u2013-]\s*\d{1,2}:\d{2}$")
+TIME_RANGE_RE = re.compile(r"^\d{1,2}:\d{2}\s*[\u2010-\u2015\u2212-]\s*\d{1,2}:\d{2}$")
 DAY_NUM_RE = re.compile(r"^\d{1,2}$")
 
 
