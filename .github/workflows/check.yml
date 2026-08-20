@@ -2,7 +2,7 @@ name: Check for new shifts
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/3 * * * *'
   workflow_dispatch: {}
 
 jobs:
