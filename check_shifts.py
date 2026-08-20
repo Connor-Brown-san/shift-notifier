@@ -101,8 +101,8 @@ def main():
 
         # If redirected to login, log in
         if "login" in page.url:
-            page.get_by_label("Email").fill(SUPERSAAS_EMAIL)
-            page.get_by_label("Password").fill(SUPERSAAS_PASSWORD)
+            page.locator("#name").fill(SUPERSAAS_EMAIL)
+            page.locator('input[type="password"]').fill(SUPERSAAS_PASSWORD)
             page.get_by_role("button", name=re.compile("log in", re.I)).click()
             page.wait_for_load_state("networkidle")
 
