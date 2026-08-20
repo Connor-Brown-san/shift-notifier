@@ -49,13 +49,6 @@ def send_notification(title: str, message: str):
 
 
 def scrape_current_month_shifts(page, month_label: str):
-    """
-    Parses the visible calendar text into a list of shift dicts:
-    {"month_label": "August 2026", "day": 20, "time": "8:00 - 13:00", "title": "Morning shift"}
-
-    Works by reading the calendar's visible text top-to-bottom and
-    tracking which day number we're currently under.
-    """
     calendar_text = page.locator("body").inner_text()
     lines = [l.strip() for l in calendar_text.split("\n") if l.strip()]
 
@@ -73,7 +66,6 @@ def scrape_current_month_shifts(page, month_label: str):
             pending_time = line
             continue
 
-        # A title line immediately follows a time line
         if pending_time is not None and current_day is not None:
             shifts.append(
                 {
@@ -99,18 +91,15 @@ def main():
 
         page.goto(SCHEDULE_URL, wait_until="networkidle")
 
-        # If redirected to login, log in
         if "login" in page.url:
             page.locator("#name").fill(SUPERSAAS_EMAIL)
             page.locator('input[type="password"]').fill(SUPERSAAS_PASSWORD)
             page.get_by_role("button", name=re.compile("log in", re.I)).click()
             page.wait_for_load_state("networkidle")
 
-        # Make sure we land back on the schedule page
         if "schedule" not in page.url or "login" in page.url:
             page.goto(SCHEDULE_URL, wait_until="networkidle")
 
-        # Read which month is currently displayed
         month_label = "unknown"
         try:
             month_label = page.locator("text=/^[A-Z][a-z]+ \\d{4}$/").first.inner_text()
@@ -118,13 +107,20 @@ def main():
             pass
 
         current_shifts = scrape_current_month_shifts(page, month_label)
+
+        # Keep debug info in case we found nothing
+        debug_url = page.url
+        debug_text = page.locator("body").inner_text()
+
         browser.close()
 
     if not current_shifts:
         print("No shifts found on page — check login worked / page structure hasn't changed.")
+        print(f"DEBUG final URL: {debug_url}")
+        print("DEBUG first 1500 chars of page text:")
+        print(debug_text[:1500])
         sys.exit(0)
 
-    # Load previously seen shifts
     if STATE_FILE.exists():
         seen = set(json.loads(STATE_FILE.read_text()))
     else:
@@ -144,7 +140,6 @@ def main():
     else:
         print(f"No new shifts. ({len(current_shifts)} shifts currently visible)")
 
-    # Save updated state
     STATE_FILE.write_text(json.dumps(sorted(current_keys.keys())))
 
 
