@@ -1,1 +1,42 @@
+name: Check for new shifts
 
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Restore state
+        uses: actions/cache@v4
+        with:
+          path: seen_shifts.json
+          key: shift-state-${{ github.run_id }}
+          restore-keys: |
+            shift-state-
+
+      - name: Run checker
+        env:
+          SUPERSAAS_EMAIL: ${{ secrets.SUPERSAAS_EMAIL }}
+          SUPERSAAS_PASSWORD: ${{ secrets.SUPERSAAS_PASSWORD }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python check_shifts.py
+
+      - name: Save state
+        uses: actions/cache@v4
+        with:
+          path: seen_shifts.json
+          key: shift-state-${{ github.run_id }}
